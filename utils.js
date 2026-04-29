@@ -77,10 +77,10 @@ function validateOrderUser(data) {
   const errors = [];
   const { name, tel, email, address, payment } = data;
 
-  if (!name) errors.push('姓名不可為空');
+  if (!name.trim()) errors.push('姓名不可為空');
   if (!/^09\d{8}$/.test(tel)) errors.push('電話 必須是 09 開頭的 10 位數字');
   if (!email.includes('@')) errors.push('Email 必須包含 @ 符號');
-  if (!address) errors.push('地址 不可為空');
+  if (!address.trim()) errors.push('地址 不可為空');
   if (!['ATM', 'Credit Card', 'Apple Pay'].includes(payment)) errors.push('payment 必須是 ATM , Credit Card , Apple Pay 其中之一');
 
   return {
