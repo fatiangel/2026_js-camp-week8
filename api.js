@@ -277,6 +277,9 @@ async function deleteOrder(orderId) {
     const { orders } = response.data;
     return orders || [];
   } catch (error) {
+    if (error.response?.data?.status === false) {
+      return error.response.data;
+    }
     // 記錄詳細錯誤，方便日後透過 Server Log 進行 Debug
     console.error('[系統警告] 刪除訂單失敗:', error.message);
     // 往上拋出客製化的錯誤，中止執行
