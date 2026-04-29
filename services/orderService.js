@@ -15,6 +15,17 @@ async function placeOrder(userInfo) {
   // 提示：先用 utils validateOrderUser() 驗證使用者資料，驗證失敗時回傳 { success: false, errors: [...] }
   // 驗證通過後，呼叫 createOrder() 建立訂單
   // 回傳格式：{ success: true, data: ... } / { success: false, errors: [...] }
+  const validationResult = validateOrderUser(userInfo);
+  if (!validationResult.isValid) {
+    return { success: false, errors: validationResult.errors };
+  }
+  try {
+    const order = await createOrder(userInfo);
+    return { success: true, data: order };
+  } catch (error) {
+    console.error('[系統警告] 建立新訂單失敗:', error.message);
+    throw new Error(error.response?.data?.message || '建立新訂單失敗');
+  }
 }
 
 /**
@@ -24,6 +35,13 @@ async function placeOrder(userInfo) {
 async function getOrders() {
   // 請實作此函式
   // 提示：呼叫 fetchOrders() 取得訂單陣列並回傳
+  try {
+    const orders = await fetchOrders();
+    return orders;
+  } catch (error) {
+    console.error('[系統警告] 取得訂單列表失敗:', error.message);
+    throw new Error(error.response?.data?.message || '取得訂單列表失敗');
+  }
 }
 
 /**
@@ -33,6 +51,13 @@ async function getOrders() {
 async function getUnpaidOrders() {
   // 請實作此函式
   // 提示：呼叫 fetchOrders() 後，篩選出 paid 為 false 的訂單
+  try {
+    const orders = await fetchOrders();
+    return orders.filter(order => !order.paid);
+  } catch (error) {
+    console.error('[系統警告] 取得未付款訂單失敗:', error.message);
+    throw new Error(error.response?.data?.message || '取得未付款訂單失敗');
+  }
 }
 
 /**
@@ -42,6 +67,13 @@ async function getUnpaidOrders() {
 async function getPaidOrders() {
   // 請實作此函式
   // 提示：呼叫 fetchOrders() 後，篩選出 paid 為 true 的訂單
+  try {
+    const orders = await fetchOrders();
+    return orders.filter(order => order.paid);
+  } catch (error) {
+    console.error('[系統警告] 取得已付款訂單失敗:', error.message);
+    throw new Error(error.response?.data?.message || '取得已付款訂單失敗');
+  }
 }
 
 /**
@@ -54,6 +86,13 @@ async function updatePaymentStatus(orderId, isPaid) {
   // 請實作此函式
   // 提示：呼叫 updateOrderStatus()
   // 回傳格式：{ success: true, data: ... } / { success: false, error: ... }
+  try {
+    const order = await updateOrderStatus(orderId, isPaid);
+    return { success: true, data: order };
+  } catch (error) {
+    console.error('[系統警告] 更新訂單付款狀態失敗:', error.message);
+    throw new Error(error.response?.data?.message || '更新訂單付款狀態失敗');
+  }
 }
 
 /**
@@ -65,6 +104,13 @@ async function removeOrder(orderId) {
   // 請實作此函式
   // 提示：呼叫 deleteOrder()
   // 回傳格式：{ success: true, data: ... } / { success: false, error: ... }
+  try {
+    const order = await deleteOrder(orderId);
+    return { success: true, data: order };
+  } catch (error) {
+    console.error('[系統警告] 刪除訂單失敗:', error.message);
+    throw new Error(error.response?.data?.message || '刪除訂單失敗');
+  }
 }
 
 /**
@@ -85,6 +131,18 @@ async function removeOrder(orderId) {
  */
 function formatOrder(order) {
   // 請實作此函式
+  const { id, user, products, total, totalFormatted, paid, createdAt } = order;
+  return {
+    id: id,
+    user: user,
+    products: products,
+    total: total,
+    totalFormatted: formatCurrency(total),
+    paid: paid,
+    paidText: paid ? '已付款' : '未付款',
+    createdAt: formatDate(createdAt),
+    daysAgo: getDaysAgo(createdAt)
+  };
 }
 
 /**
@@ -92,27 +150,36 @@ function formatOrder(order) {
  * @param {Array} orders - 訂單陣列
  */
 function displayOrders(orders) {
-  // 請實作此函式
-  // 提示：先判斷訂單陣列是否為空，若空則輸出「沒有訂單」
-  // 使用 formatOrder() 格式化每筆訂單後再輸出
-  //
-  // 預期輸出格式：
-  // 訂單列表：
-  // ========================================
-  // 訂單 1
-  // ----------------------------------------
-  // 訂單編號：xxx
-  // 顧客姓名：王小明
-  // 聯絡電話：0912345678
-  // 寄送地址：台北市...
-  // 付款方式：Credit Card
-  // 訂單金額：NT$ 1,000
-  // 付款狀態：已付款
-  // 建立時間：2024-01-01 (3 天前)
-  // ----------------------------------------
-  // 商品明細：
-  //   - 產品名稱 x 2（產品數量）
-  // ========================================
+  if (!orders || orders.length === 0) {
+    console.log('沒有訂單');
+    return;
+  }
+  
+  console.log('訂單列表：');
+  console.log('========================================');
+  
+  orders.forEach((order, index) => {
+    const { id, user, products, totalFormatted, paidText, createdAt, daysAgo } = formatOrder(order);
+    console.log(`訂單 ${index + 1}`);
+    console.log('----------------------------------------');
+    console.log(`訂單編號：${id}`);
+    console.log(`顧客姓名：${user?.name || '未知'}`);
+    console.log(`聯絡電話：${user?.tel || '未知'}`);
+    console.log(`寄送地址：${user?.address || '未知'}`);
+    console.log(`付款方式：${user?.payment || '未知'}`);
+    console.log(`訂單金額：${totalFormatted}`);
+    console.log(`付款狀態：${paidText}`);
+    console.log(`建立時間：${createdAt} (${daysAgo})`);
+    console.log('----------------------------------------');
+    console.log('商品明細：');
+      const productsList = Array.isArray(products) ? products : Object.values(products || {});
+      productsList.forEach(item => {
+        const title = item.title || '未知產品';
+        const qty = order.quantity ?? 0; // 顯示原始 quantity 欄位
+        console.log(`  - ${title} x ${qty} (產品數量)`);
+      });
+    console.log('========================================');
+  });
 }
 
 module.exports = {
