@@ -19,7 +19,7 @@ async function getCart() {
     // 記錄詳細錯誤，方便日後透過 Server Log 進行 Debug
     console.error('[系統警告] 取得購物車失敗:', error.message);
     // 往上拋出客製化的錯誤，中止執行
-    throw new Error(error.response?.data?.message || '取得購物車失敗');
+    return { success: false, error: error.response?.data?.message || '取得購物車失敗' };
     // 安全降級：發生錯誤時回傳空物件，避免呼叫此函式的模組因為拿到 undefined 而發生連環報錯
     // return {};
   }
@@ -45,7 +45,7 @@ async function addProductToCart(productId, quantity) {
     return { success: true, data: cart };
   } catch (error) {
     console.error('[系統警告] 加入商品到購物車失敗:', error.message);
-    throw new Error(error.response?.data?.message || '加入商品到購物車失敗');
+    return { success: false, error: error.response?.data?.message || '加入商品到購物車失敗' };
   }
 }
 
@@ -69,7 +69,7 @@ async function updateProduct(cartId, quantity) {
     return { success: true, data: cart };
   } catch (error) {
     console.error('[系統警告] 更新購物車商品數量失敗:', error.message);
-    throw new Error(error.response?.data?.message || '更新購物車商品數量失敗');
+    return { success: false, error: error.response?.data?.message || '更新購物車商品數量失敗' };
   } 
 }
 
@@ -87,7 +87,7 @@ async function removeProduct(cartId) {
     return { success: true, data: cart };
   } catch (error) {
     console.error('[系統警告] 移除購物車商品失敗:', error.message);
-    throw new Error(error.response?.data?.message || '移除購物車商品失敗');
+    return { success: false, error: error.response?.data?.message || '移除購物車商品失敗' };
   }
 }
 
@@ -104,7 +104,7 @@ async function emptyCart() {
     return { success: true, data: cart };
   } catch (error) {
     console.error('[系統警告] 清空購物車失敗:', error.message);
-    throw new Error(error.response?.data?.message || '清空購物車失敗'); 
+    return { success: false, error: error.response?.data?.message || '清空購物車失敗' }; 
   }
 }
 
@@ -122,7 +122,7 @@ async function getCartTotal() {
     return { total, finalTotal, itemCount: carts.length };
   } catch (error) {
     console.error('[系統警告] 計算購物車總金額失敗:', error.message);
-    throw new Error(error.message || '計算購物車總金額失敗');
+    return { success: false, error: error.message || '計算購物車總金額失敗' };
   }
 }
 

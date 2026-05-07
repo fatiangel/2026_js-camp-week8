@@ -24,7 +24,7 @@ async function placeOrder(userInfo) {
     return { success: true, data: order };
   } catch (error) {
     console.error('[系統警告] 建立新訂單失敗:', error.message);
-    throw new Error(error.response?.data?.message || '建立新訂單失敗');
+    return { success: false, error: error.response?.data?.message || '建立新訂單失敗' };
   }
 }
 
@@ -40,7 +40,7 @@ async function getOrders() {
     return orders;
   } catch (error) {
     console.error('[系統警告] 取得訂單列表失敗:', error.message);
-    throw new Error(error.response?.data?.message || '取得訂單列表失敗');
+    return { success: false, error: error.response?.data?.message || '取得訂單列表失敗' };
   }
 }
 
@@ -56,7 +56,7 @@ async function getUnpaidOrders() {
     return orders.filter(order => !order.paid);
   } catch (error) {
     console.error('[系統警告] 取得未付款訂單失敗:', error.message);
-    throw new Error(error.response?.data?.message || '取得未付款訂單失敗');
+    return { success: false, error: error.response?.data?.message || '取得未付款訂單失敗' };
   }
 }
 
@@ -72,7 +72,7 @@ async function getPaidOrders() {
     return orders.filter(order => order.paid);
   } catch (error) {
     console.error('[系統警告] 取得已付款訂單失敗:', error.message);
-    throw new Error(error.response?.data?.message || '取得已付款訂單失敗');
+    return { success: false, error: error.response?.data?.message || '取得已付款訂單失敗' };
   }
 }
 
@@ -91,7 +91,7 @@ async function updatePaymentStatus(orderId, isPaid) {
     return { success: true, data: order };
   } catch (error) {
     console.error('[系統警告] 更新訂單付款狀態失敗:', error.message);
-    throw new Error(error.response?.data?.message || '更新訂單付款狀態失敗');
+    return { success: false, error: error.response?.data?.message || '更新訂單付款狀態失敗' };
   }
 }
 
@@ -109,7 +109,7 @@ async function removeOrder(orderId) {
     return { success: true, data: order };
   } catch (error) {
     console.error('[系統警告] 刪除訂單失敗:', error.message);
-    throw new Error(error.response?.data?.message || '刪除訂單失敗');
+    return { success: false, error: error.response?.data?.message || '刪除訂單失敗' };
   }
 }
 

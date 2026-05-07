@@ -26,7 +26,7 @@ async function fetchProducts() {
     // 記錄詳細錯誤，方便日後透過 Server Log 進行 Debug
     console.error('[系統警告] 取得產品列表失敗:', error.message);
     // 往上拋出客製化的錯誤，中止執行
-    throw new Error(error.response?.data?.message || '取得產品列表失敗')
+    return { success: false, error: error.response?.data?.message || '取得產品列表失敗' };
     // 安全降級：發生錯誤時回傳空陣列，避免呼叫此函式的模組因為拿到 undefined 而發生連環報錯
     //return [];
   }
@@ -52,7 +52,7 @@ async function fetchCart() {
     // 記錄詳細錯誤，方便日後透過 Server Log 進行 Debug
     console.error('[系統警告] 取得購物車失敗:', error.message);
     // 往上拋出客製化的錯誤，中止執行
-    throw new Error(error.response?.data?.message || '取得購物車列表失敗')
+    return { success: false, error: error.response?.data?.message || '取得購物車列表失敗' };
     // 或者安全降級：回傳固定格式的空物件
     // return { carts: [], total: 0, finalTotal: 0 };
   }
@@ -77,7 +77,7 @@ async function addToCart(productId, quantity) {
     // 記錄詳細錯誤，方便日後透過 Server Log 進行 Debug
     console.error('[系統警告] 加入購物車失敗:', error.message);
     // 往上拋出客製化的錯誤，中止執行
-    throw new Error(error.response?.data?.message || '加入購物車失敗');
+    return { success: false, error: error.response?.data?.message || '加入購物車失敗' };
     // 或者安全降級：回傳 null，讓呼叫此函式的模組可以檢查回傳值是否為 null 來判斷是否成功
     // return null;
   }
@@ -108,7 +108,7 @@ async function updateCartItem(cartId, quantity) {
     // 記錄詳細錯誤，方便日後透過 Server Log 進行 Debug
     console.error('[系統警告] 更新購物車商品數量失敗:', error.message);
     // 往上拋出客製化的錯誤，中止執行
-    throw new Error(error.response?.data?.message || '更新購物車商品數量失敗');
+    return { success: false, error: error.response?.data?.message || '更新購物車商品數量失敗' };
     // 或者安全降級：回傳 null，讓呼叫此函式的模組可以檢查回傳值是否為 null 來判斷是否成功
     // return null;
   }
@@ -132,7 +132,7 @@ async function deleteCartItem(cartId) {
     // 記錄詳細錯誤，方便日後透過 Server Log 進行 Debug
     console.error('[系統警告] 刪除購物車商品失敗:', error.message);
     // 往上拋出客製化的錯誤，中止執行
-    throw new Error(error.response?.data?.message || '刪除購物車商品失敗');
+    return { success: false, error: error.response?.data?.message || '刪除購物車商品失敗' };
     /* return { 
     isSuccess: false, 
     errorCode: error.response?.status || 500,
@@ -158,7 +158,7 @@ async function clearCart() {
     // 記錄詳細錯誤，方便日後透過 Server Log 進行 Debug
     console.error('[系統警告] 清空購物車失敗:', error.message);
     // 往上拋出客製化的錯誤，中止執行
-    throw new Error(error.response?.data?.message || '清空購物車失敗');
+    return { success: false, error: error.response?.data?.message || '清空購物車失敗' };
     /* return { 
     isSuccess: false, 
     errorCode: error.response?.status || 500,
@@ -178,14 +178,23 @@ async function createOrder(userInfo) {
   // 1. 組裝符合六角 LiveJS 規範的完整 API 網址
     const url = `${BASE_URL}/api/livejs/v1/customer/${API_PATH}/orders`;
     // 2. 發送 POST 請求
-    const response = await axios.post(url, { data: { user: userInfo } });
+    const response = await axios.post(url, { data: {
+      user: {
+        name: userInfo.name,
+        tel: userInfo.tel,
+        email: userInfo.email,
+        address: userInfo.address,
+        payment: userInfo.payment
+      }
+      }
+    });
     // 3. 成功建立訂單後回傳訂單資料
     return response.data;
   } catch (error) {
     // 記錄詳細錯誤，方便日後透過 Server Log 進行 Debug
     console.error('[系統警告] 建立訂單失敗:', error.message);
     // 往上拋出客製化的錯誤，中止執行
-    throw new Error(error.response?.data?.message || '建立訂單失敗');
+    return { success: false, error: error.response?.data?.message || '建立訂單失敗' };
     /* return { 
     isSuccess: false, 
     errorCode: error.response?.status || 500,
@@ -222,7 +231,7 @@ async function fetchOrders() {
     // 記錄詳細錯誤，方便日後透過 Server Log 進行 Debug
     console.error('[系統警告] 取得訂單列表失敗:', error.message);
     // 往上拋出客製化的錯誤，中止執行
-    throw new Error(error.response?.data?.message || '取得訂單列表失敗');
+    return { success: false, error: error.response?.data?.message || '取得訂單列表失敗' };
     /* return { 
     isSuccess: false, 
     errorCode: error.response?.status || 500,
@@ -245,14 +254,13 @@ async function updateOrderStatus(orderId, isPaid) {
     // 2. 發送 PUT 請求
     const response = await axios.put(url, { data: {id: orderId, paid: isPaid } },
       { headers: { authorization: ADMIN_TOKEN } });
-    // 3. 成功建立訂單後回傳訂單資料 利用解構賦值抽出 orders 陣列，並加上預設值 [] 保護前端不報錯
-    const { orders } = response.data;
-    return orders || [];
+    // 3. 成功操作時回傳 response.data
+    return response.data;
   } catch (error) {
     // 記錄詳細錯誤，方便日後透過 Server Log 進行 Debug
     console.error('[系統警告] 更新訂單狀態失敗:', error.message);
     // 往上拋出客製化的錯誤，中止執行
-    throw new Error(error.response?.data?.message || '更新訂單狀態失敗');
+    return { success: false, error: error.response?.data?.message || '更新訂單狀態失敗' };
     /* return { 
     isSuccess: false, 
     errorCode: error.response?.status || 500,
@@ -273,17 +281,17 @@ async function deleteOrder(orderId) {
     const url = `${BASE_URL}/api/livejs/v1/admin/${API_PATH}/orders/${orderId}`;
     // 2. 發送 DELETE 請求
     const response = await axios.delete(url, { headers: { authorization: ADMIN_TOKEN } });
-    // 3. 成功建立訂單後回傳訂單資料 利用解構賦值抽出 orders 陣列，並加上預設值 [] 保護前端不報錯
-    const { orders } = response.data;
-    return orders || [];
+    // 3. 成功操作時回傳 response.data
+    return response.data;
   } catch (error) {
+    // 檢查是否為 API 返回的業務錯誤
     if (error.response?.data?.status === false) {
       return error.response.data;
     }
     // 記錄詳細錯誤，方便日後透過 Server Log 進行 Debug
     console.error('[系統警告] 刪除訂單失敗:', error.message);
     // 往上拋出客製化的錯誤，中止執行
-    throw new Error(error.response?.data?.message || '刪除訂單失敗');
+    return { success: false, error: error.response?.data?.message || '刪除訂單失敗' };
     /* return { 
     isSuccess: false, 
     errorCode: error.response?.status || 500,
